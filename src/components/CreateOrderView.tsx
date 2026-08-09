@@ -1509,6 +1509,7 @@ export default function CreateOrderView({
     
     const customWorkerApiUrl = localStorage.getItem('cloudflare_worker_api_url') || '';
     let baseOrigin = "https://lyheiwandaijiamax.com";
+    const basePath = '/passenger_order.html';
     
     return `${baseOrigin}${basePath}?driver=${encodeURIComponent(userPhone || '18609518888')}&name=${encodeURIComponent(settings?.customAppName?.trim() || 'XX代驾')}&startLocation=${encodeURIComponent(startLocation || '')}&t=${currentTs}`;
   })();

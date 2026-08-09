@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getBaseApiUrl } from '../lib/dbProxy';
-import hwdjLogo from '../assets/images/hwdj_launcher_icon_1784366761434.jpg';
+import hwdjLogo from '../assets/images/hwdjtb.png';
 import { 
   Smartphone, 
   ShieldCheck, 
@@ -196,11 +196,11 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           
           {/* Brand Area with hwdjtb logo */}
           <div className="flex flex-col items-center justify-center pt-3 pb-1 shrink-0">
-            <div className="w-28 h-28 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-[#0e1017] p-1.5 transition-all duration-300 hover:scale-105">
+            <div className="w-28 h-28 rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 transition-all duration-300 hover:scale-105">
               <img 
                 src={hwdjLogo} 
                 alt="黑湾代驾" 
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-2xl"
                 referrerPolicy="no-referrer"
               />
             </div>

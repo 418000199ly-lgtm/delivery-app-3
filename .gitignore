@@ -6,19 +6,3 @@ coverage/
 *.log
 .env*
 !.env.example
-
-# Deployment archives and temporary bundle packages
-*.zip
-*.tar
-*.tgz
-*.gz
-*.rar
-*.7z
-*.apk
-*.ipa
-public/*.zip
-public/*.tar
-public/*.gz
-
-# Runtime local database state
-local_db.json
