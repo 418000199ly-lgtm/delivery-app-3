@@ -1,4 +1,4 @@
-name: 🚀 黑湾代驾MAX 手机端 & Web 一键打包 CI/CD Build
+name: 🚀 黑湾代驾MAX 司机端安卓构建 CI/CD
 
 on:
   push:
@@ -13,10 +13,10 @@ on:
 
 jobs:
   # ==========================================
-  # 任务 1: 打包 Android APK & 宝塔部署包
+  # 任务: 打包 手机端（司机）Android APK
   # ==========================================
   build-android:
-    name: 📱 打包 Android APK & 宝塔部署包
+    name: 📱 打包 黑湾代驾MAX 司机端 Android APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -68,91 +68,11 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK Artifact
+      - name: Upload Driver APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 黑湾代驾MAX-司机端-Android-APK
+          name: 黑湾代驾MAX-手机司机端-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
-  # ==========================================
-  # 任务 2: 打包 iOS IPA (供巨魔 TrollStore / 签名工具安装)
-  # ==========================================
-  build-ios-trollstore:
-    name: 🍎 打包 iOS IPA (巨魔/TrollStore)
-    runs-on: macos-14
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install Dependencies & Build Web App
-        run: |
-          npm install --legacy-peer-deps --no-audit --no-fund
-          npm run build
-
-      - name: Add & Sync iOS Platform
-        run: |
-          npx cap add ios || true
-          python3 scripts/generate_mobile_assets.py || node scripts/generate-icons.js || true
-          npx cap sync ios
-
-      - name: Install CocoaPods (If Podfile exists)
-        run: |
-          if [ -f "ios/App/Podfile" ]; then
-            cd ios/App && pod install
-          else
-            echo "No Podfile found, skipping CocoaPods install."
-          fi
-
-      - name: Build iOS Unsigned Release App
-        run: |
-          cd ios/App
-          if [ -d "App.xcworkspace" ]; then
-            xcodebuild -workspace App.xcworkspace \
-                       -scheme App \
-                       -configuration Release \
-                       -sdk iphoneos \
-                       -derivedDataPath build \
-                       CODE_SIGN_STYLE="Manual" \
-                       CODE_SIGN_IDENTITY="-" \
-                       CODE_SIGNING_REQUIRED=NO \
-                       CODE_SIGNING_ALLOWED=YES \
-                       AD_HOC_CODE_SIGNING_ALLOWED=YES \
-                       DEVELOPMENT_TEAM="" \
-                       PROVISIONING_PROFILE_SPECIFIER=""
-          else
-            xcodebuild -project App.xcodeproj \
-                       -scheme App \
-                       -configuration Release \
-                       -sdk iphoneos \
-                       -derivedDataPath build \
-                       CODE_SIGN_STYLE="Manual" \
-                       CODE_SIGN_IDENTITY="-" \
-                       CODE_SIGNING_REQUIRED=NO \
-                       CODE_SIGNING_ALLOWED=YES \
-                       AD_HOC_CODE_SIGNING_ALLOWED=YES \
-                       DEVELOPMENT_TEAM="" \
-                       PROVISIONING_PROFILE_SPECIFIER=""
-          fi
-
-      - name: Package App into IPA for TrollStore
-        run: |
-          cd ios/App
-          mkdir -p Payload
-          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
-          zip -r 黑湾代驾MAX_TrollStore.ipa Payload
-          ls -lh 黑湾代驾MAX_TrollStore.ipa
-
-      - name: Upload iOS IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: 黑湾代驾MAX-司机端-iOS-TrollStore-IPA
-          path: ios/App/黑湾代驾MAX_TrollStore.ipa
-          retention-days: 14
 
