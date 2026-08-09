@@ -1415,23 +1415,16 @@ async function startServer() {
     }
 
     if (fs.existsSync(targetPath)) {
-      const stat = fs.statSync(targetPath);
-      let contentType = 'application/zip';
-      if (requestedName.endsWith('.tar.gz') || requestedName.endsWith('.tgz')) {
-        contentType = 'application/gzip';
-      } else if (requestedName.endsWith('.tar')) {
-        contentType = 'application/x-tar';
-      }
-
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${requestedName}"`,
-        'Content-Length': stat.size,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+      res.setHeader('Content-Transfer-Encoding', 'binary');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      return res.download(targetPath, requestedName, (err) => {
+        if (err && !res.headersSent) {
+          console.error('[Package Service] Download stream error:', err);
+          res.status(500).send('Download failed');
+        }
       });
-      fs.createReadStream(targetPath).pipe(res);
     } else {
       res.status(500).json({ error: 'Package file build failed' });
     }

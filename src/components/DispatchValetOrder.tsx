@@ -272,6 +272,11 @@ export default function DispatchValetOrder({
 
   // Network IP auto-detected current city state
   const [currentCity, setCurrentCity] = useState<string>(userTeamCity || '银川市');
+  const [isLocatingGPS, setIsLocatingGPS] = useState(false);
+  const handleFetchGPSLocation = (_manual = false) => {
+    setIsLocatingGPS(true);
+    setTimeout(() => setIsLocatingGPS(false), 1000);
+  };
 
   // Helper to auto-compress image and convert to PNG format
   const compressAndConvertToPng = (file: File): Promise<string> => {

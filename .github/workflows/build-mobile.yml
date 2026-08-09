@@ -1,0 +1,116 @@
+name: 🚀 货的吉祥代驾 Mobile App & Web CI/CD Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-android-and-web:
+    name: 📱 Build Android APK & Baota Web Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: ☕ Setup Java JDK (Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install Node dependencies
+        run: |
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: 🎨 Generate Mobile Assets & Icons
+        run: |
+          pip install Pillow
+          python3 scripts/generate_mobile_assets.py
+
+      - name: 🔨 Build Web Assets & Server
+        run: |
+          npm run build
+
+      - name: ⚡ Sync Capacitor Android Native Code
+        run: |
+          npx cap sync android
+
+      - name: 🤖 Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: 📦 Generate Baota Deploy Packages
+        run: |
+          python3 create_deploy_zip.py
+
+      - name: 📤 Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daijia-Driver-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
+
+      - name: 📤 Upload Baota Web Deploy Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daijia-Baota-Web-Deployment-Zip
+          path: daijia_deploy.zip
+          if-no-files-found: warn
+
+  build-ios-project:
+    name: 🍎 Build iOS Xcode Bundle
+    runs-on: macos-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Node dependencies
+        run: |
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: 🎨 Generate Mobile Assets & Icons
+        run: |
+          python3 scripts/generate_mobile_assets.py
+
+      - name: 🔨 Build Web Assets
+        run: |
+          npm run build
+
+      - name: ⚡ Sync Capacitor iOS Native Project
+        run: |
+          npx cap sync ios
+
+      - name: 📦 Archive iOS App Project
+        run: |
+          zip -r Daijia_iOS_App_Source.zip ios/
+
+      - name: 📤 Upload iOS App Xcode Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daijia-Driver-iOS-Xcode-Project
+          path: Daijia_iOS_App_Source.zip
+          if-no-files-found: warn

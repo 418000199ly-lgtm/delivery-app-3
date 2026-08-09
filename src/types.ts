@@ -40,6 +40,7 @@ export interface ChauffeurSettings {
   onlineOrdersEnabled?: boolean;
   city?: string;
   isBanned?: boolean;
+  role?: string;
 }
 
 export interface TripState {

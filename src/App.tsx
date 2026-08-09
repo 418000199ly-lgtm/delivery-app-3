@@ -34,6 +34,7 @@ import { db, doc, onSnapshot, setDoc, deleteDoc, collection, getDoc, getBaseApiU
 import { IncomingOrderOverlay } from './components/IncomingOrderOverlay';
 import { speakText, initAudioUnlock } from './utils/speech';
 import { getDeviceId, clearDeviceSession } from './utils/deviceSession';
+import { downloadDeployZip } from './utils/downloadHelper';
 
 const getCityCenterCoords = (cityName: string): { lat: number; lng: number } => {
   const norm = (cityName || '').trim();
@@ -1957,15 +1958,14 @@ export default function App() {
             <span>管理后台</span>
           </button>
 
-          <a
-            href="/daijia_deploy.zip"
-            download="daijia_deploy.zip"
+          <button
+            onClick={() => downloadDeployZip('daijia_deploy.zip')}
             className="px-3 py-1.5 rounded-full flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black shadow-lg shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer border border-emerald-300 ml-1 shrink-0"
-            title="一键下载部署至中国大陆服务器宝塔面板的完整部署压缩包 (daijia_deploy.zip - 无解压错误)"
+            title="一键下载部署至中国大陆服务器宝塔面板的完整部署压缩包 (daijia_deploy.zip - 0解压错误)"
           >
             <Download className="w-3.5 h-3.5 text-slate-950 animate-bounce" />
             <span>📦 一键下载宝塔部署包 (daijia_deploy.zip)</span>
-          </a>
+          </button>
         </div>
       </div>
 
