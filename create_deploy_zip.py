@@ -38,7 +38,7 @@ with open('ecosystem.config.js', 'w', encoding='utf-8') as f:
     f.write(ecosystem_content)
 
 # 4. Create README_BAOTA.md
-readme_content = """# 🚗 货的吉祥代驾平台 - 阿里云宝塔面板一键部署指南
+readme_content = """# 🚗 黑湾代驾MAX平台 - 阿里云宝塔面板一键部署指南
 
 ## 核心特性：
 - **完全中国大陆本地化运行**：已完全切断 Firebase、Cloudflare 等国外被墙 API 依赖。

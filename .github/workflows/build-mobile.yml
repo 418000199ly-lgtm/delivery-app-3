@@ -1,4 +1,4 @@
-name: 🚀 货的吉祥代驾 Mobile App & Web CI/CD Build
+name: 🚀 黑湾代驾MAX Mobile App & Web CI/CD Build
 
 on:
   push:
@@ -28,6 +28,9 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: 🐘 Setup Gradle Environment
+        uses: gradle/actions/setup-gradle@v3
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
@@ -53,6 +56,7 @@ jobs:
       - name: 🤖 Build Android APK
         run: |
           cd android
+          gradle wrapper --gradle-version 8.7 || true
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
@@ -63,19 +67,19 @@ jobs:
       - name: 📤 Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Daijia-Driver-Android-APK
+          name: Heiwan-Daijia-MAX-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: warn
 
       - name: 📤 Upload Baota Web Deploy Zip Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Daijia-Baota-Web-Deployment-Zip
+          name: Heiwan-Daijia-MAX-Baota-Web-Deployment-Zip
           path: daijia_deploy.zip
           if-no-files-found: warn
 
   build-ios-project:
-    name: 🍎 Build iOS Xcode Bundle
+    name: 🍎 Build iOS Xcode Bundle & TrollStore IPA
     runs-on: macos-latest
 
     steps:
@@ -112,25 +116,25 @@ jobs:
           if [ -d "build/App.xcarchive/Products/Applications/App.app" ]; then
             mkdir -p Payload
             cp -r build/App.xcarchive/Products/Applications/App.app Payload/
-            zip -r Daijia-Driver-TrollStore.ipa Payload/
+            zip -r Heiwan_Daijia_MAX_TrollStore.ipa Payload/
           else
             echo "Xcode archive app bundle not generated directly, preparing source package..."
           fi
 
       - name: 📦 Archive iOS App Project
         run: |
-          zip -r Daijia_iOS_App_Source.zip ios/
+          zip -r Heiwan_Daijia_MAX_iOS_Source.zip ios/
 
       - name: 📤 Upload iOS TrollStore IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Daijia-Driver-iOS-TrollStore-IPA
-          path: Daijia-Driver-TrollStore.ipa
+          name: Heiwan-Daijia-MAX-iOS-TrollStore-IPA
+          path: Heiwan_Daijia_MAX_TrollStore.ipa
           if-no-files-found: ignore
 
       - name: 📤 Upload iOS App Xcode Bundle Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Daijia-Driver-iOS-Xcode-Project
-          path: Daijia_iOS_App_Source.zip
+          name: Heiwan-Daijia-MAX-iOS-Xcode-Project
+          path: Heiwan_Daijia_MAX_iOS_Source.zip
           if-no-files-found: warn
