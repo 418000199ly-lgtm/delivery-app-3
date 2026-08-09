@@ -104,9 +104,29 @@ jobs:
         run: |
           npx cap sync ios
 
+      - name: 🍎 Build Unsigned iOS IPA (TrollStore / 巨魔安装包)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath ../../build/App.xcarchive archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO || true
+          cd ../..
+          if [ -d "build/App.xcarchive/Products/Applications/App.app" ]; then
+            mkdir -p Payload
+            cp -r build/App.xcarchive/Products/Applications/App.app Payload/
+            zip -r Daijia-Driver-TrollStore.ipa Payload/
+          else
+            echo "Xcode archive app bundle not generated directly, preparing source package..."
+          fi
+
       - name: 📦 Archive iOS App Project
         run: |
           zip -r Daijia_iOS_App_Source.zip ios/
+
+      - name: 📤 Upload iOS TrollStore IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daijia-Driver-iOS-TrollStore-IPA
+          path: Daijia-Driver-TrollStore.ipa
+          if-no-files-found: ignore
 
       - name: 📤 Upload iOS App Xcode Bundle Artifact
         uses: actions/upload-artifact@v4
