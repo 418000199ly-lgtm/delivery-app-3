@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { QrCode, Clock, RotateCw, CheckCircle2, Plus, Minus, Phone } from 'lucide-react';
 import { BillingRules, TripState, ChauffeurSettings, checkVipActive, DriverStats } from '../types';
-import { db, doc, onSnapshot, deleteDoc, setDoc } from '../lib/dbProxy';
+import { db, doc, onSnapshot, deleteDoc, setDoc, getDoc } from '../lib/dbProxy';
 import { speakText } from '../utils/speech';
 import PassengerOrderView from './PassengerOrderView';
 import QRCode from 'qrcode';
