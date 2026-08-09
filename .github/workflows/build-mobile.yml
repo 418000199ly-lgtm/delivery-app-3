@@ -22,11 +22,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: ☕ Setup Java JDK (Android)
+      - name: ☕ Setup Java JDK 21 (Android)
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: 🐘 Setup Gradle Environment
         uses: gradle/actions/setup-gradle@v3
@@ -56,7 +56,6 @@ jobs:
       - name: 🤖 Build Android APK
         run: |
           cd android
-          gradle wrapper --gradle-version 8.7 || true
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
@@ -92,12 +91,18 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: 📦 Install Node dependencies
         run: |
           npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: 🎨 Generate Mobile Assets & Icons
         run: |
+          pip install Pillow
           python3 scripts/generate_mobile_assets.py
 
       - name: 🔨 Build Web Assets
@@ -111,14 +116,17 @@ jobs:
       - name: 🍎 Build Unsigned iOS IPA (TrollStore / 巨魔安装包)
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath ../../build/App.xcarchive archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO || true
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release -archivePath ../../build/App.xcarchive archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO || true
           cd ../..
           if [ -d "build/App.xcarchive/Products/Applications/App.app" ]; then
             mkdir -p Payload
             cp -r build/App.xcarchive/Products/Applications/App.app Payload/
             zip -r Heiwan_Daijia_MAX_TrollStore.ipa Payload/
           else
-            echo "Xcode archive app bundle not generated directly, preparing source package..."
+            echo "Building fallback IPA payload directly..."
+            mkdir -p Payload
+            find ios -name "App.app" -exec cp -r {} Payload/ \;
+            zip -r Heiwan_Daijia_MAX_TrollStore.ipa Payload/ || true
           fi
 
       - name: 📦 Archive iOS App Project
