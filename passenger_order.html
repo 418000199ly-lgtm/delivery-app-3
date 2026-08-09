@@ -715,7 +715,7 @@
     // 1. 提取 URL 请求中可能附带的司机电话参数 (?driver=18609518888)
     const urlParams = new URLSearchParams(window.location.search);
     const rawDriverPhone = urlParams.get('driver') || '18609518888';
-    const driverPhone = rawDriverPhone.trim();
+    const driverPhone = rawDriverPhone.replace(/\s+/g, '').trim();
 
     // 智能自适应 API 接口域名：
     // 1. 默认使用当前同源主站接口 (window.location.origin)，无需跨域、无 SSL 问题、100% 畅通

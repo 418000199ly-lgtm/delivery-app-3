@@ -1122,9 +1122,9 @@ export default function App() {
 
   // Listen for real-time incoming passenger orders from passenger self-service scans or admin dispatching
   useEffect(() => {
-    if (!userPhone) return;
+    const cleanPhone = (userPhone || '').replace(/\s+/g, '').trim();
+    if (!cleanPhone) return;
 
-    // Strict Rule: Drivers in OFFLINE state or pure merchants/shop owners CANNOT receive order popups!
     const userRoleStr = userRole || settings?.role || '';
     const isPureMerchant = (
       userRoleStr.includes('商户') || 
@@ -1134,12 +1134,12 @@ export default function App() {
     );
     const isManagement = ['开发者司机', '城市老板司机', '城市管理司机', '城市派单员司机', '总指挥官', '开发者'].some(r => userRoleStr.includes(r));
 
-    if (!isOnline || (isPureMerchant && !isManagement)) {
+    if (isPureMerchant && !isManagement) {
       setIncomingOrder(null);
       return;
     }
 
-    const docRef = doc(db, 'passenger_links', userPhone);
+    const docRef = doc(db, 'passenger_links', cleanPhone);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -1147,7 +1147,7 @@ export default function App() {
           const submitTime = data.timestamp || 0;
           // Verify submission timestamp to avoid processing historical stales (last 1 hour to prevent clock skews)
           if (submitTime > Date.now() - 3600000) {
-            // Direct passenger scan specifically assigned to this driver phone - ONLY trigger when driver is ONLINE!
+            // Direct passenger scan specifically assigned to this driver phone
             if (currentView !== 'create_order') {
               setIncomingOrder(data);
             } else {

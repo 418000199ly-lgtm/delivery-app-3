@@ -918,6 +918,8 @@ async function startServer() {
 
   // 1. GET DOCUMENT PROXY
   app.get('/api/db/get', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
     const { col, id } = req.query;
     if (!col || !id) {
       return res.status(400).json({ error: 'Missing col or id parameters' });
@@ -1314,33 +1316,33 @@ async function startServer() {
         return res.status(400).json({ success: false, error: '缺少必填参数' });
       }
 
+      const cleanDriverPhone = String(driverPhone).replace(/\s+/g, '').trim();
+      const cleanPassengerPhone = String(passengerPhone).replace(/\s+/g, '').trim();
+      const cleanStartLocation = String(startLocation).trim();
+      const cleanDestination = String(destination || '').trim();
+
+      const payloadData = {
+        driverPhone: cleanDriverPhone,
+        passengerPhone: cleanPassengerPhone,
+        startLocation: cleanStartLocation,
+        destination: cleanDestination,
+        status: "submitted",
+        timestamp: Date.now()
+      };
+
       if (isMySQLEnabled && mysqlPool) {
-        const data = {
-          passengerPhone: String(passengerPhone).trim(),
-          startLocation: String(startLocation).trim(),
-          destination: String(destination || '').trim(),
-          status: "submitted",
-          timestamp: Date.now()
-        };
-        const dataStr = JSON.stringify(data);
+        const dataStr = JSON.stringify(payloadData);
         await mysqlPool.query(
           'INSERT INTO `daijia_documents` (`collection`, `doc_id`, `data`) VALUES (?, ?, ?) ' +
           'ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)',
-          ['passenger_links', String(driverPhone), dataStr]
+          ['passenger_links', cleanDriverPhone, dataStr]
         );
         return res.json({ success: true, timestamp: Date.now() });
       }
 
-      const payloadData = {
-        passengerPhone: String(passengerPhone).trim(),
-        startLocation: String(startLocation).trim(),
-        destination: String(destination || '').trim(),
-        status: "submitted",
-        timestamp: Date.now()
-      };
       const dbData = readLocalJsonDb();
       if (!dbData.passenger_links) dbData.passenger_links = {};
-      dbData.passenger_links[String(driverPhone)] = payloadData;
+      dbData.passenger_links[cleanDriverPhone] = payloadData;
       writeLocalJsonDb(dbData);
 
       res.json({ success: true, timestamp: Date.now() });

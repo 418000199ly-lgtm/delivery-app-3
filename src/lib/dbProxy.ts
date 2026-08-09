@@ -127,35 +127,49 @@ export function where(field: string, operator: string, value: any) {
 // REST API Database Client Implementations
 export async function getDoc(docRef: any): Promise<ProxyDocumentSnapshot> {
   const baseUrl = getBaseApiUrl();
-  const url = `${baseUrl}/api/db/get?col=${encodeURIComponent(docRef.collectionName)}&id=${encodeURIComponent(docRef.id)}`;
+  const cleanId = String(docRef.id || '').replace(/\s+/g, '').trim();
+  const url = `${baseUrl}/api/db/get?col=${encodeURIComponent(docRef.collectionName)}&id=${encodeURIComponent(cleanId)}&_t=${Date.now()}`;
   
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
       throw new Error(`DB Fetch failed with status: ${res.status}`);
     }
     const result = await res.json();
-    return new ProxyDocumentSnapshot(docRef.id, result.data, result.exists);
+    if (result.exists && result.data) {
+      try {
+        const cacheKey = `mock_db_${docRef.collectionName}_${cleanId}`;
+        localStorage.setItem(cacheKey, JSON.stringify(result.data));
+      } catch (_) {}
+    }
+    return new ProxyDocumentSnapshot(cleanId, result.data, result.exists);
   } catch (err: any) {
     console.warn("DB Proxy error in getDoc, falling back to local simulation:", err);
     // Secondary simulation fallback to guarantee absolute offline stability
-    const cacheKey = `mock_db_${docRef.collectionName}_${docRef.id}`;
+    const cacheKey = `mock_db_${docRef.collectionName}_${cleanId}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      return new ProxyDocumentSnapshot(docRef.id, JSON.parse(cached), true);
+      return new ProxyDocumentSnapshot(cleanId, JSON.parse(cached), true);
     }
-    return new ProxyDocumentSnapshot(docRef.id, null, false);
+    return new ProxyDocumentSnapshot(cleanId, null, false);
   }
 }
 
 export async function setDoc(docRef: any, data: any, options?: { merge?: boolean }) {
   const baseUrl = getBaseApiUrl();
   const url = `${baseUrl}/api/db/set`;
+  const cleanId = String(docRef.id || '').replace(/\s+/g, '').trim();
   
   // Cache locally first for instant reactive response and local offline availability
-  const cacheKey = `mock_db_${docRef.collectionName}_${docRef.id}`;
+  const cacheKey = `mock_db_${docRef.collectionName}_${cleanId}`;
   try {
-    localStorage.setItem(cacheKey, JSON.stringify(data));
+    if (options?.merge) {
+      const existing = localStorage.getItem(cacheKey);
+      const parsed = existing ? JSON.parse(existing) : {};
+      localStorage.setItem(cacheKey, JSON.stringify({ ...parsed, ...data }));
+    } else {
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    }
   } catch (_) {}
 
   try {
@@ -164,7 +178,7 @@ export async function setDoc(docRef: any, data: any, options?: { merge?: boolean
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         col: docRef.collectionName,
-        id: docRef.id,
+        id: cleanId,
         data,
         merge: options?.merge ?? false
       })
@@ -182,9 +196,10 @@ export async function setDoc(docRef: any, data: any, options?: { merge?: boolean
 export async function updateDoc(docRef: any, data: any) {
   const baseUrl = getBaseApiUrl();
   const url = `${baseUrl}/api/db/update`;
+  const cleanId = String(docRef.id || '').replace(/\s+/g, '').trim();
 
   // Merge locally in mock store first
-  const cacheKey = `mock_db_${docRef.collectionName}_${docRef.id}`;
+  const cacheKey = `mock_db_${docRef.collectionName}_${cleanId}`;
   try {
     const current = localStorage.getItem(cacheKey);
     const parsed = current ? JSON.parse(current) : {};
@@ -198,7 +213,7 @@ export async function updateDoc(docRef: any, data: any) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         col: docRef.collectionName,
-        id: docRef.id,
+        id: cleanId,
         data
       })
     });
@@ -215,8 +230,9 @@ export async function updateDoc(docRef: any, data: any) {
 export async function deleteDoc(docRef: any) {
   const baseUrl = getBaseApiUrl();
   const url = `${baseUrl}/api/db/delete`;
+  const cleanId = String(docRef.id || '').replace(/\s+/g, '').trim();
 
-  const cacheKey = `mock_db_${docRef.collectionName}_${docRef.id}`;
+  const cacheKey = `mock_db_${docRef.collectionName}_${cleanId}`;
   try {
     localStorage.removeItem(cacheKey);
   } catch (_) {}
@@ -227,7 +243,7 @@ export async function deleteDoc(docRef: any) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         col: docRef.collectionName,
-        id: docRef.id
+        id: cleanId
       })
     });
     if (!res.ok) {

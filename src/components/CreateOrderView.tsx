@@ -1433,14 +1433,14 @@ export default function CreateOrderView({
 
   // Real-time synchronization for passenger self-service QR code scans
   useEffect(() => {
-    const driverPhoneNum = userPhone || '18609518888';
+    const driverPhoneNum = (userPhone || '18609518888').replace(/\s+/g, '').trim();
 
     const docRef = doc(db, 'passenger_links', driverPhoneNum);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         // Check if the submission occurred within the last 5 minutes to avoid stale entries
-        if (data.status === 'submitted' && data.timestamp > Date.now() - 300000) {
+        if (data && data.status === 'submitted' && data.timestamp > Date.now() - 300000) {
           const isValet = data.isValetOrder || data.isPlatformDispatch || data.orderRemark === '商户代叫';
 
           if (data.passengerPhone) setPhoneNumber(data.passengerPhone);
@@ -1472,14 +1472,25 @@ export default function CreateOrderView({
 
   // Synchronous Firestore persist for passenger scan access so they get the driver's latest active location
   useEffect(() => {
-    const driverPhoneNum = userPhone || '18609518888';
+    const driverPhoneNum = (userPhone || '18609518888').replace(/\s+/g, '').trim();
     const docRef = doc(db, 'passenger_links', driverPhoneNum);
     
-    setDoc(docRef, {
-      driverPhone: driverPhoneNum,
-      driverStartLocation: startLocation,
-      updatedAt: Date.now()
-    }, { merge: true }).catch(err => console.error('Error persisting driver start location in passenger_links:', err));
+    getDoc(docRef).then(snap => {
+      if (snap.exists() && snap.data()?.status === 'submitted') {
+        return; // Preserve submitted order
+      }
+      setDoc(docRef, {
+        driverPhone: driverPhoneNum,
+        driverStartLocation: startLocation,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(err => console.error('Error persisting driver start location in passenger_links:', err));
+    }).catch(() => {
+      setDoc(docRef, {
+        driverPhone: driverPhoneNum,
+        driverStartLocation: startLocation,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(err => console.error('Error persisting driver start location in passenger_links:', err));
+    });
   }, [startLocation, userPhone]);
 
 
