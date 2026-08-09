@@ -209,7 +209,7 @@ async function startServer() {
   });
 
   // Pure API Domain Isolation Guard:
-  // When accessed via api.* domain (e.g., https://api.lyheiwandaijiamax.com/),
+  // When accessed via api.* domain (e.g., https://lyheiwandaijiamax.com/),
   // disable all Web GUI / frontend page rendering on root path to prevent unauthorized portal exposure,
   // while ensuring all /api/* data endpoints operate with 100% full performance.
   app.use((req, res, next) => {
@@ -1321,31 +1321,48 @@ async function startServer() {
       const cleanStartLocation = String(startLocation).trim();
       const cleanDestination = String(destination || '').trim();
 
+      const orderId = 'scan_ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const payloadData = {
+        id: orderId,
+        orderId: orderId,
         driverPhone: cleanDriverPhone,
         passengerPhone: cleanPassengerPhone,
         startLocation: cleanStartLocation,
-        destination: cleanDestination,
+        destination: cleanDestination || '由司机根据现场口头协商规划行程',
         status: "submitted",
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        updatedAt: Date.now(),
+        isValetOrder: false,
+        orderRemark: '乘客扫码自主下单'
       };
 
       if (isMySQLEnabled && mysqlPool) {
         const dataStr = JSON.stringify(payloadData);
+        // 1. Write to passenger_links specifically for assigned driver instant popup
         await mysqlPool.query(
           'INSERT INTO `daijia_documents` (`collection`, `doc_id`, `data`) VALUES (?, ?, ?) ' +
           'ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)',
           ['passenger_links', cleanDriverPhone, dataStr]
         );
-        return res.json({ success: true, timestamp: Date.now() });
+        // 2. Also write to merchant_orders so it persists in history and order hall
+        await mysqlPool.query(
+          'INSERT INTO `daijia_documents` (`collection`, `doc_id`, `data`) VALUES (?, ?, ?) ' +
+          'ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)',
+          ['merchant_orders', orderId, dataStr]
+        );
+        return res.json({ success: true, timestamp: Date.now(), orderId });
       }
 
       const dbData = readLocalJsonDb();
       if (!dbData.passenger_links) dbData.passenger_links = {};
       dbData.passenger_links[cleanDriverPhone] = payloadData;
+
+      if (!dbData.merchant_orders) dbData.merchant_orders = {};
+      dbData.merchant_orders[orderId] = payloadData;
+
       writeLocalJsonDb(dbData);
 
-      res.json({ success: true, timestamp: Date.now() });
+      res.json({ success: true, timestamp: Date.now(), orderId });
     } catch (err: any) {
       console.error('[Server Proxy] submit proxy error:', err);
       res.status(500).json({ success: false, error: err.message || 'Submit Proxy Error' });
@@ -1358,6 +1375,7 @@ async function startServer() {
     fs.mkdirSync(qrsDir, { recursive: true });
   }
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  app.use(express.static(path.join(process.cwd(), 'public')));
 
   app.post('/api/upload-wechat-qr', (req, res) => {
     try {

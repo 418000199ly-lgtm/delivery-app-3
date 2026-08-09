@@ -181,7 +181,7 @@ export default function AdminPanel({
       const stored = localStorage.getItem('cloudflare_worker_api_url');
       if (stored && stored.trim()) return stored.trim();
     } catch (_) {}
-    return 'https://api.lyheiwandaijiamax.com';
+    return 'https://lyheiwandaijiamax.com';
   });
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'failed'>('idle');
@@ -1351,7 +1351,7 @@ export default function AdminPanel({
         const base = getBaseApiUrl();
         const candidateUrls = [
           `${base}${endpoint}`,
-          `https://api.lyheiwandaijiamax.com${endpoint}`,
+          `https://lyheiwandaijiamax.com${endpoint}`,
           `https://admin.lyheiwandaijiamax.com${endpoint}`,
           endpoint
         ].filter((v, i, a) => v && a.indexOf(v) === i);
@@ -1422,7 +1422,7 @@ export default function AdminPanel({
         const base = getBaseApiUrl();
         const candidateUrls = [
           `${base}${endpoint}`,
-          `https://api.lyheiwandaijiamax.com${endpoint}`,
+          `https://lyheiwandaijiamax.com${endpoint}`,
           `https://admin.lyheiwandaijiamax.com${endpoint}`,
           endpoint
         ].filter((v, i, a) => v && a.indexOf(v) === i);

@@ -803,6 +803,8 @@ async function startServer() {
     }
   });
   app.get("/api/db/get", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
     const { col, id } = req.query;
     if (!col || !id) {
       return res.status(400).json({ error: "Missing col or id parameters" });
@@ -1154,33 +1156,43 @@ async function startServer() {
       if (!driverPhone || !passengerPhone || !startLocation) {
         return res.status(400).json({ success: false, error: "\u7F3A\u5C11\u5FC5\u586B\u53C2\u6570" });
       }
+      const cleanDriverPhone = String(driverPhone).replace(/\s+/g, "").trim();
+      const cleanPassengerPhone = String(passengerPhone).replace(/\s+/g, "").trim();
+      const cleanStartLocation = String(startLocation).trim();
+      const cleanDestination = String(destination || "").trim();
+      const orderId = "scan_ord_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+      const payloadData = {
+        id: orderId,
+        orderId,
+        driverPhone: cleanDriverPhone,
+        passengerPhone: cleanPassengerPhone,
+        startLocation: cleanStartLocation,
+        destination: cleanDestination || "\u7531\u53F8\u673A\u6839\u636E\u73B0\u573A\u53E3\u5934\u534F\u5546\u89C4\u5212\u884C\u7A0B",
+        status: "submitted",
+        timestamp: Date.now(),
+        updatedAt: Date.now(),
+        isValetOrder: false,
+        orderRemark: "\u4E58\u5BA2\u626B\u7801\u81EA\u4E3B\u4E0B\u5355"
+      };
       if (isMySQLEnabled && mysqlPool) {
-        const data = {
-          passengerPhone: String(passengerPhone).trim(),
-          startLocation: String(startLocation).trim(),
-          destination: String(destination || "").trim(),
-          status: "submitted",
-          timestamp: Date.now()
-        };
-        const dataStr = JSON.stringify(data);
+        const dataStr = JSON.stringify(payloadData);
         await mysqlPool.query(
           "INSERT INTO `daijia_documents` (`collection`, `doc_id`, `data`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)",
-          ["passenger_links", String(driverPhone), dataStr]
+          ["passenger_links", cleanDriverPhone, dataStr]
         );
-        return res.json({ success: true, timestamp: Date.now() });
+        await mysqlPool.query(
+          "INSERT INTO `daijia_documents` (`collection`, `doc_id`, `data`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)",
+          ["merchant_orders", orderId, dataStr]
+        );
+        return res.json({ success: true, timestamp: Date.now(), orderId });
       }
-      const payloadData = {
-        passengerPhone: String(passengerPhone).trim(),
-        startLocation: String(startLocation).trim(),
-        destination: String(destination || "").trim(),
-        status: "submitted",
-        timestamp: Date.now()
-      };
       const dbData = readLocalJsonDb();
       if (!dbData.passenger_links) dbData.passenger_links = {};
-      dbData.passenger_links[String(driverPhone)] = payloadData;
+      dbData.passenger_links[cleanDriverPhone] = payloadData;
+      if (!dbData.merchant_orders) dbData.merchant_orders = {};
+      dbData.merchant_orders[orderId] = payloadData;
       writeLocalJsonDb(dbData);
-      res.json({ success: true, timestamp: Date.now() });
+      res.json({ success: true, timestamp: Date.now(), orderId });
     } catch (err) {
       console.error("[Server Proxy] submit proxy error:", err);
       res.status(500).json({ success: false, error: err.message || "Submit Proxy Error" });
@@ -1191,6 +1203,7 @@ async function startServer() {
     import_fs.default.mkdirSync(qrsDir, { recursive: true });
   }
   app.use("/uploads", import_express.default.static(import_path.default.join(process.cwd(), "uploads")));
+  app.use(import_express.default.static(import_path.default.join(process.cwd(), "public")));
   app.post("/api/upload-wechat-qr", (req, res) => {
     try {
       const { phone, imageBase64 } = req.body;

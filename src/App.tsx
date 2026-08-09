@@ -1143,23 +1143,20 @@ export default function App() {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data && data.status === 'submitted') {
-          const submitTime = data.timestamp || 0;
-          // Verify submission timestamp to avoid processing historical stales (last 1 hour to prevent clock skews)
-          if (submitTime > Date.now() - 3600000) {
+        if (data && (data.status === 'submitted' || data.passengerPhone)) {
+          const rawTime = Number(data.timestamp || data.updatedAt || Date.now());
+          // Allow flexible time window (up to 24h or valid timestamp) to prevent cross-device clock skew drops
+          if (!rawTime || isNaN(rawTime) || rawTime > Date.now() - 86400000) {
             // Direct passenger scan specifically assigned to this driver phone
-            if (currentView !== 'create_order') {
-              setIncomingOrder(data);
-            } else {
-              setActiveOnlineOrder(data);
-            }
+            setIncomingOrder(data);
+            setActiveOnlineOrder(data);
           }
         }
       }
     });
 
     return () => unsubscribe();
-  }, [userPhone, currentView, isOnline]);
+  }, [userPhone, currentView]);
 
   // Listen for real-time cancellation of driver's active online order
   useEffect(() => {
@@ -1614,7 +1611,7 @@ export default function App() {
       );
     }
 
-    if (incomingOrder && currentView !== 'create_order') {
+    if (incomingOrder) {
       return (
         <IncomingOrderOverlay
           order={incomingOrder}
@@ -1646,6 +1643,8 @@ export default function App() {
             settings={settings}
             stats={stats}
             userPhone={userPhone}
+            activeOnlineOrder={activeOnlineOrder}
+            onClearOnlineOrder={() => setActiveOnlineOrder(null)}
             onStartTrip={handleStartTrip}
             onNavigateBack={async () => {
               if (activeOnlineOrder) {
@@ -1687,8 +1686,6 @@ export default function App() {
               setCurrentView('home');
             }}
             driverCoords={driverCoords}
-            activeOnlineOrder={activeOnlineOrder}
-            onClearOnlineOrder={() => setActiveOnlineOrder(null)}
           />
         );
 

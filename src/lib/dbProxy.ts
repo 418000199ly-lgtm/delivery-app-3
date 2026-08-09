@@ -67,7 +67,7 @@ export function getBaseApiUrl(): string {
 
     // Android APK / Hybrid native shell / file protocol / local app bundle
     if (isHybridApp || hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'https://api.lyheiwandaijiamax.com';
+      return 'https://lyheiwandaijiamax.com';
     }
     
     // Standard web browser on domain
@@ -76,7 +76,7 @@ export function getBaseApiUrl(): string {
     }
   }
   
-  return 'https://api.lyheiwandaijiamax.com';
+  return 'https://lyheiwandaijiamax.com';
 }
 
 // Mirroring firestore imports

@@ -59,7 +59,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
       const base = getBaseApiUrl();
       const candidateUrls = [
         `${base}${endpoint}`,
-        `https://api.lyheiwandaijiamax.com${endpoint}`,
+        `https://lyheiwandaijiamax.com${endpoint}`,
         `https://admin.lyheiwandaijiamax.com${endpoint}`,
         endpoint
       ].filter((v, i, a) => v && a.indexOf(v) === i);
@@ -130,7 +130,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
       const base = getBaseApiUrl();
       const candidateUrls = [
         `${base}${endpoint}`,
-        `https://api.lyheiwandaijiamax.com${endpoint}`,
+        `https://lyheiwandaijiamax.com${endpoint}`,
         `https://admin.lyheiwandaijiamax.com${endpoint}`,
         endpoint
       ].filter((v, i, a) => v && a.indexOf(v) === i);

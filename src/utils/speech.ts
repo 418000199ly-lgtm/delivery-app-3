@@ -351,7 +351,7 @@ async function playMp3AudioStreams(text: string, onEnd?: () => void) {
   // Production server domain endpoints for Android / iOS standalone APK shells
   mp3Urls.push(
     `https://admin.lyheiwandaijiamax.com/api/tts?text=${encodedText}`,
-    `https://api.lyheiwandaijiamax.com/api/tts?text=${encodedText}`,
+    `https://lyheiwandaijiamax.com/api/tts?text=${encodedText}`,
     `https://lyheiwandaijiamax.com/api/tts?text=${encodedText}`
   );
 

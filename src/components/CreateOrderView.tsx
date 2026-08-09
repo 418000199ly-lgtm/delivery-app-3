@@ -1476,21 +1476,18 @@ export default function CreateOrderView({
     const docRef = doc(db, 'passenger_links', driverPhoneNum);
     
     getDoc(docRef).then(snap => {
-      if (snap.exists() && snap.data()?.status === 'submitted') {
-        return; // Preserve submitted order
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d && (d.status === 'submitted' || d.passengerPhone)) {
+          return; // Preserve submitted passenger order data completely
+        }
       }
       setDoc(docRef, {
         driverPhone: driverPhoneNum,
         driverStartLocation: startLocation,
         updatedAt: Date.now()
       }, { merge: true }).catch(err => console.error('Error persisting driver start location in passenger_links:', err));
-    }).catch(() => {
-      setDoc(docRef, {
-        driverPhone: driverPhoneNum,
-        driverStartLocation: startLocation,
-        updatedAt: Date.now()
-      }, { merge: true }).catch(err => console.error('Error persisting driver start location in passenger_links:', err));
-    });
+    }).catch(() => {});
   }, [startLocation, userPhone]);
 
 
@@ -1511,21 +1508,7 @@ export default function CreateOrderView({
     );
     
     const customWorkerApiUrl = localStorage.getItem('cloudflare_worker_api_url') || '';
-    let baseOrigin = origin;
-    let basePath = '/passenger_order.html';
-    
-    if (isPrivateLocal) {
-      baseOrigin = 'https://lyheiwandaijiamax.com';
-    } else {
-      if (customWorkerApiUrl) {
-        try {
-          const urlObj = new URL(customWorkerApiUrl);
-          baseOrigin = urlObj.origin;
-        } catch (e) {
-          // Fallback to origin
-        }
-      }
-    }
+    let baseOrigin = "https://lyheiwandaijiamax.com";
     
     return `${baseOrigin}${basePath}?driver=${encodeURIComponent(userPhone || '18609518888')}&name=${encodeURIComponent(settings?.customAppName?.trim() || 'XX代驾')}&startLocation=${encodeURIComponent(startLocation || '')}&t=${currentTs}`;
   })();
