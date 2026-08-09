@@ -2,7 +2,7 @@ import { Jimp } from 'jimp';
 import fs from 'fs';
 import path from 'path';
 
-const LOGO_SOURCE = 'src/assets/images/hwdj_launcher_icon_1784366761434.jpg';
+const LOGO_SOURCE = 'public/hwdjtb.png';
 const DARK_BG_COLOR = 0x03050cff; // Splash background color (#03050c)
 const WHITE_COLOR = 0xffffffff;   // Launcher icon background color (#ffffff)
 const TRANSPARENT_COLOR = 0x00000000;
@@ -134,14 +134,18 @@ async function generate() {
 
   // Make 1024x1024 iOS Marketing Icon & AppIcon
   const iosIconSizes = [
+    { name: 'AppIcon-20x20@1x.png', size: 20 },
     { name: 'AppIcon-20x20@2x.png', size: 40 },
     { name: 'AppIcon-20x20@3x.png', size: 60 },
+    { name: 'AppIcon-29x29@1x.png', size: 29 },
     { name: 'AppIcon-29x29@2x.png', size: 58 },
     { name: 'AppIcon-29x29@3x.png', size: 87 },
+    { name: 'AppIcon-40x40@1x.png', size: 40 },
     { name: 'AppIcon-40x40@2x.png', size: 80 },
     { name: 'AppIcon-40x40@3x.png', size: 120 },
     { name: 'AppIcon-60x60@2x.png', size: 120 },
     { name: 'AppIcon-60x60@3x.png', size: 180 },
+    { name: 'AppIcon-76x76@1x.png', size: 76 },
     { name: 'AppIcon-76x76@2x.png', size: 152 },
     { name: 'AppIcon-83.5x83.5@2x.png', size: 167 },
     { name: 'AppIcon-1024.png', size: 1024 },

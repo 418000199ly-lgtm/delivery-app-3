@@ -51,8 +51,7 @@ jobs:
 
       - name: Generate Mobile Assets & Icons
         run: |
-          pip install Pillow || true
-          python3 scripts/generate_mobile_assets.py || node scripts/generate-icons.js || true
+          node scripts/generate-icons.js
 
       - name: Capacitor Sync
         run: |
@@ -111,7 +110,7 @@ jobs:
       - name: Add & Sync iOS Platform
         run: |
           npx cap add ios || true
-          python3 scripts/generate_mobile_assets.py || node scripts/generate-icons.js || true
+          node scripts/generate-icons.js
           npx cap sync ios
 
       - name: Install CocoaPods (If Podfile exists)
