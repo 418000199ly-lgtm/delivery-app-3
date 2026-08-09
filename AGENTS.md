@@ -4,7 +4,7 @@
 When the user requests GitHub sync, code push, or asks "What changes did you make?" / "填写What changes did you make?", ALWAYS generate a clear, formatted commit message ready to paste into the AI Studio "What changes did you make?" input box.
 
 ### Latest Update Commit Message:
-fix(sync): clean repository structure and optimize assets for GitHub sync
+fix(mobile): update GitHub Actions CI/CD to match old delivery-app repository build configuration for Android APK (~16.8MB) and iOS TrollStore IPA (~36MB)
 
 ## Mobile & Packaging Rules
 1. App Icon: `hwdjtb.png` is the standard lossless 1024x1024 full-bleed icon stored locally in `public/hwdjtb.png` and `src/assets/images/hwdjtb.png`.
