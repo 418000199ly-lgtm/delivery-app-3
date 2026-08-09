@@ -1,6 +1,7 @@
 import { Jimp } from 'jimp';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const LOGO_SOURCE = 'public/hwdjtb.png';
 const DARK_BG_COLOR = 0x03050cff; // Splash background color (#03050c)
@@ -11,6 +12,18 @@ function ensureDirExists(filePath) {
   const dirname = path.dirname(filePath);
   if (!fs.existsSync(dirname)) {
     fs.mkdirSync(dirname, { recursive: true });
+  }
+}
+
+function runPythonFallback() {
+  console.log('Falling back to python3 scripts/generate_mobile_assets.py for asset generation...');
+  try {
+    execSync('python3 scripts/generate_mobile_assets.py', { stdio: 'inherit' });
+    console.log('--- All assets generated successfully via Python fallback! ---');
+    process.exit(0);
+  } catch (pyErr) {
+    console.error('Python asset generation script failed:', pyErr);
+    process.exit(1);
   }
 }
 
@@ -37,8 +50,15 @@ async function generate() {
     process.exit(1);
   }
 
-  const baseLogo = await Jimp.read(LOGO_SOURCE);
-  console.log(`Source logo loaded successfully: ${baseLogo.width}x${baseLogo.height}`);
+  let baseLogo;
+  try {
+    baseLogo = await Jimp.read(LOGO_SOURCE);
+    console.log(`Source logo loaded successfully: ${baseLogo.width}x${baseLogo.height}`);
+  } catch (err) {
+    console.warn(`Jimp.read failed (${err.message}), switching to Python generator...`);
+    runPythonFallback();
+    return;
+  }
 
   // Classic MIPMAP icon sizes
   const mipmapSizes = [

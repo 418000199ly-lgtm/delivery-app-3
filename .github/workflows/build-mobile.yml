@@ -51,7 +51,7 @@ jobs:
 
       - name: Generate Mobile Assets & Icons
         run: |
-          node scripts/generate-icons.js
+          python3 scripts/generate_mobile_assets.py || node scripts/generate-icons.js
 
       - name: Capacitor Sync
         run: |
